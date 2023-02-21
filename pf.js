@@ -79,10 +79,10 @@ class ParticleFilter {
 	#lastNeff = Infinity;
 
 	constructor(particleCnt, ParticleState, transition, evaluation, estimation, resampling) {
-		this.transition = transition; Asserts.isSubclassInstanceOf(transition, ATransition, "Transition has to extend ATransition");
-		this.evaluation = evaluation; Asserts.isSubclassInstanceOf(evaluation, AEvaluation, "Evaluation has to extend AEvaluation");
-		this.estimation = estimation; Asserts.isSubclassInstanceOf(estimation, AEstimation, "Estimation has to extend AEstimation");
-		this.resampling = resampling; Asserts.isSubclassInstanceOf(resampling, AResampling, "Resampling has to extend AResampling");
+		this.#transition = transition; Asserts.isSubclassInstanceOf(transition, ATransition, "Transition has to extend ATransition");
+		this.#evaluation = evaluation; Asserts.isSubclassInstanceOf(evaluation, AEvaluation, "Evaluation has to extend AEvaluation");
+		this.#estimation = estimation; Asserts.isSubclassInstanceOf(estimation, AEstimation, "Estimation has to extend AEstimation");
+		this.#resampling = resampling; Asserts.isSubclassInstanceOf(resampling, AResampling, "Resampling has to extend AResampling");
 		
 		this.#ParticleState = ParticleState;
 		this.#particles = [];

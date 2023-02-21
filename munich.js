@@ -11,17 +11,32 @@ function normpdf (x, mean, stdDev) {
 // ######################
 class BallStateInit extends AInitializer {
 	#bboxMin; #bboxMax;
-	constructor(bboxMin, bboxMax) {
+	#angleMin; #angleMax;
+	#velocityMin; #velocityMax;
+	
+	constructor(bboxMin, bboxMax, angleMin, angleMax, velocityMin, velocityMax) {
 		super();
-		this.bboxMin = bboxMin;
-		this.bboxMax = bboxMax;
+		this.#bboxMin = bboxMin;
+		this.#bboxMax = bboxMax;
+		this.#angleMin = angleMin;
+		this.#angleMax = angleMax;
+		this.#velocityMin = velocityMin;
+		this.#velocityMax = velocityMax;
 	}
 	
 	init(particles) {
 		for(let particle of particles) {
-			let x = this.bboxMin[0] + Math.random() * (this.bboxMax[0] - this.bboxMin[0]);
-			let y = this.bboxMin[1] + Math.random() * (this.bboxMax[1] - this.bboxMin[1]);
+			let x = this.#bboxMin[0] + Math.random() * (this.#bboxMax[0] - this.#bboxMin[0]);
+			let y = this.#bboxMin[1] + Math.random() * (this.#bboxMax[1] - this.#bboxMin[1]);
 			particle.state.pos = math.matrix([x, y]);
+			
+			let v = this.#velocityMin + Math.random() * (this.#velocityMax - this.#velocityMin);
+			let angle = this.#angleMin + Math.random() * (this.#angleMax - this.#angleMin);
+			
+			let vx = v * Math.cos(angle / 180 * Math.PI);
+			let vy = v * Math.sin(angle / 180 * Math.PI);
+			particle.state.velocity = math.matrix([vx, vy]);
+			
 			particle.weight = 1/particles.length;
 		}
 	}
@@ -30,7 +45,7 @@ class BallTransition extends ATransition {
 	transition(particles, control) { 
 		const dt = control.getDt();
 		for (let particle of particles) {
-			particle.pos = particle.pos + particle.velocity * dt;
+			particle.state.pos = math.add(particle.state.pos, math.multiply(particle.state.velocity, dt));
 		}
 	}
 }
@@ -216,5 +231,5 @@ let resampling = new ResamplingSimple();
 let pf = new ParticleFilter(5000, BallState, transition, evaluation, estimation, resampling);
 pf.setNeffThreshold(1);
 
-let ballInitializer = new BallStateInit([-5, -5], [5, 5]);
+let ballInitializer = new BallStateInit([-5, -5], [5, 5], 0, 90, 0, 50);
 const simulation = new Simulation(pf, ballInitializer);

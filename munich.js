@@ -2,7 +2,6 @@ class Simulation {
 	constructor() {
 		this.inputs = {};
 		this.parameters = {};
-		this.gtCurve = [1, 2, 3];
 		this.#addInput("simulationDuration");
 		this.#addInput("simulationDelta");
 		this.#addInput("gravity");
@@ -16,15 +15,17 @@ class Simulation {
 	#addInput(name) {
 		const el = document.querySelector("." + name);
 		this.inputs[name] = el;
-		this.parameters[name] = el.value;
+		this.parameters[name] = parseFloat(el.value);
 		el.addEventListener('change', (event) => {
-			const value = event.target.value;
+			const value = parseFloat(event.target.value);
 			this.parameters[name] = value;
 			this.#replot();
 		});
 	}
 	
 	#replot() {
+		const duration = this.parameters["simulationDuration"];
+		const dt = this.parameters["simulationDelta"];
 		const g = this.parameters["gravity"];
 		const x0 = this.parameters["launchPositionX"];
 		const y0 = this.parameters["launchPositionY"];
@@ -33,10 +34,26 @@ class Simulation {
 		
 		const v0x = v0 * Math.cos(angle);
 		const v0y = v0 * Math.sin(angle);
-		this.gtCurve = [1, 2, 3];
+		
+		// simulate perfect ball curve
+		this.timestamps = [];
+		this.gtCurveX = [];
+		this.gtCurveY = [];
+		for (let t = 0; t < duration; t += dt) {
+			this.timestamps.push(t);
+			
+			const x = x0 + v0x * t;
+			const y = y0 + v0y * t + (1.0/2.0) * g * t*t;
+			this.gtCurveX.push(x);
+			this.gtCurveY.push(y);
+		}
+		
 		Plotly.newPlot("gd", /* JSON object */ {
-			"data": [{ "y": this.gtCurve }],
-			"layout": { "width": 600, "height": 400}
+			"data": [{ 
+				"x": this.gtCurveX,
+				"y": this.gtCurveY,
+				
+			}],
 		});
 	}
 }

@@ -1,7 +1,7 @@
 class Asserts {
 	
-	static ctorExtendsFrom(ctor, requiredParentCtor, message) {
-		if(ctor.__proto__ != requiredParentCtor) {
+	static isSubclassInstanceOf(instance, requiredParentCtor, message) {
+		if(Object.getPrototypeOf(instance.constructor) != requiredParentCtor) {
 			throw new Error("Wrong Superclass: " + message);
 		}
 	}
@@ -46,15 +46,15 @@ class Particle {
 }
 
 class AInitializer {
-	static init(particles) { throw new Error("Abstract method!"); }
+	init(particles) { throw new Error("Abstract method!"); }
 }
 
 class ATransition {
-	transition(particles) { throw new Error("Abstract method!"); }
+	transition(particles, control) { throw new Error("Abstract method!"); }
 }
 
 class AEvaluation {
-	evaluate(particles) { throw new Error("Abstract method!"); }
+	evaluate(particles, observation) { throw new Error("Abstract method!"); }
 }
 
 class AEstimation {
@@ -78,12 +78,11 @@ class ParticleFilter {
 	#particles;
 	#lastNeff = Infinity;
 
-	constructor(particleCnt, ParticleState, Transition, Evaluation, Estimation, Resampling) {
-		this.transition = new Transition(); Asserts.ctorExtendsFrom(Transition, ATransition, "Transition has to extend ATransition");
-		this.transition = new Transition(); Asserts.ctorExtendsFrom(Transition, ATransition, "Transition has to extend ATransition");
-		this.evaluation = new Evaluation(); Asserts.ctorExtendsFrom(Evaluation, AEvaluation, "Evaluation has to extend AEvaluation");
-		this.estimation = new Estimation(); Asserts.ctorExtendsFrom(Estimation, AEstimation, "Estimation has to extend AEstimation");
-		this.resampling = new Resampling(); Asserts.ctorExtendsFrom(Resampling, AResampling, "Resampling has to extend AResampling");
+	constructor(particleCnt, ParticleState, transition, evaluation, estimation, resampling) {
+		this.transition = transition; Asserts.isSubclassInstanceOf(transition, ATransition, "Transition has to extend ATransition");
+		this.evaluation = evaluation; Asserts.isSubclassInstanceOf(evaluation, AEvaluation, "Evaluation has to extend AEvaluation");
+		this.estimation = estimation; Asserts.isSubclassInstanceOf(estimation, AEstimation, "Estimation has to extend AEstimation");
+		this.resampling = resampling; Asserts.isSubclassInstanceOf(resampling, AResampling, "Resampling has to extend AResampling");
 		
 		this.ParticleState = ParticleState;
 		this.particles = [];
@@ -93,7 +92,7 @@ class ParticleFilter {
 	}
 	
 	setNeffThreshold(neffThreshold) { this.neffThresholdPercent = neffThreshold; }
-	initWith(Initializer) { Initializer.init(this.particles); }
+	initWith(initializer) { initializer.init(this.particles); }
 	
 	update(control, observations) {
 		Asserts.ctorExtendsFrom(control.prototype, AControl, "Control structure has to extend AControl");
@@ -107,6 +106,8 @@ class ParticleFilter {
 		this.lastNeff = this.normalize();
 		return this.estimation.estimate(this.particles, this.ParticleState);
 	}
+	
+	getParticles() { return this.particles; }
 	
 	#normalize() {
 		let weightSum = this.particles.reduce((partialSum, p) => partialSum + p.weight, 0);

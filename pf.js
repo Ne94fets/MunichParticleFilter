@@ -92,7 +92,7 @@ class ParticleFilter {
 	}
 	
 	setNeffThreshold(neffThreshold) { this.#neffThresholdPercent = neffThreshold; }
-	initWith(initializer) { initializer.init(this.particles); }
+	initWith(initializer) { initializer.init(this.#particles); }
 	
 	update(control, observations) {
 		Asserts.isSubclassInstanceOf(control, AControl, "Control structure has to extend AControl");
@@ -101,13 +101,13 @@ class ParticleFilter {
 		if(this.#lastNeff < this.#particles.length * this.#neffThresholdPercent) {
 			this.#resampling.resample(this.#particles, this.#ParticleState);
 		}
-		this.#transition.transition(this.particles, control);
-		this.#evaluation.evaluate(this.particles, observations);
+		this.#transition.transition(this.#particles, control);
+		this.#evaluation.evaluate(this.#particles, observations);
 		this.#lastNeff = this.normalize();
 		return this.#estimation.estimate(this.#particles, this.#ParticleState);
 	}
 	
-	getParticles() { return this.particles; }
+	getParticles() { return this.#particles; }
 	
 	#normalize() {
 		let weightSum = this.#particles.reduce((partialSum, p) => partialSum + p.weight, 0);

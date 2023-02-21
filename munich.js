@@ -5,6 +5,15 @@ function normpdf (x, mean, stdDev) {
 	return (1 + erf) / 2
 }
 
+// Standard Normal variate using Box-Muller transform.
+function gaussianRandom(mean=0, stdev=1) {
+    let u = 1 - Math.random(); //Converting [0,1) to (0,1)
+    let v = Math.random();
+    let z = Math.sqrt( -2.0 * Math.log( u ) ) * Math.cos( 2.0 * Math.PI * v );
+    // Transform to the desired mean and standard deviation:
+    return z * stdev + mean;
+}
+
 
 // ######################
 // # BEHAVIOR
@@ -44,8 +53,16 @@ class BallStateInit extends AInitializer {
 class BallTransition extends ATransition {
 	transition(particles, control) { 
 		const dt = control.getDt();
+		const velSigma = control.getVelSigma();
 		for (let particle of particles) {
-			particle.state.pos = math.add(particle.state.pos, math.multiply(particle.state.velocity, dt));
+			const newPos = math.add(particle.state.pos, math.multiply(particle.state.velocity, dt));
+			particle.state.pos = newPos;
+			
+			// modify velocity a bit
+			const vx = particle.state.velocity.get([0]);
+			const vy = particle.state.velocity.get([1]);
+			const newVel = math.matrix([gaussianRandom(vx, velSigma), gaussianRandom(vy, velSigma)]);
+			particle.state.velocity = newVel;
 		}
 	}
 }
@@ -90,16 +107,21 @@ class BallState extends AParticleState {
 }
 class BallControl extends AControl {
 	#dt;
+	#velSigma;
 	
-	constructor(dt) {
+	constructor(dt, velSigma) {
 		super();
 		this.#dt = dt;
+		this.#velSigma = velSigma;
 	}
 	
 	getDt() {
 		return this.#dt;
 	}
 	
+	getVelSigma() {
+		return this.#velSigma;
+	}
 }
 
 class BallObservation {
@@ -150,6 +172,7 @@ class Simulation {
 		this.#addInput("launchPositionY");
 		this.#addInput("launchVelocity");
 		this.#addInput("launchAngle");
+		this.#addInput("transVelSigma");
 		this.#addInput("evalPosSigma");
 		this.#simulate();
 	}
@@ -174,6 +197,7 @@ class Simulation {
 		const y0 = this.parameters["launchPositionY"];
 		const v0 = this.parameters["launchVelocity"];
 		const angle = this.parameters["launchAngle"] / 180 * Math.PI;
+		const transVelSigma = this.parameters["transVelSigma"];
 		const evalPosSigma = this.parameters["evalPosSigma"];
 		
 		const v0x = v0 * Math.cos(angle);
@@ -200,7 +224,7 @@ class Simulation {
 			this.gtCurveX.push(x);
 			this.gtCurveY.push(y);
 			
-			const control = new BallControl(dt);
+			const control = new BallControl(dt, transVelSigma);
 			const observations = new BallObservations([new BallObservation(math.matrix([x, y]), evalPosSigma)]);
 			
 			this.#particleFilter.update(control, observations);

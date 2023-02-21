@@ -225,6 +225,7 @@ class Simulation {
 	}
 	
 	#simulate() {
+		this.#setPlotLimits();
 		const sleep = 1 / this.parameters["simulationSpeed"];
 		const duration = this.parameters["simulationDuration"];
 		const dt = this.parameters["simulationDelta"];
@@ -277,6 +278,7 @@ class Simulation {
 			const estimation = this.#particleFilter.update(control, observations);
 			this.estCurveX.push(estimation.pos.get([0]));
 			this.estCurveY.push(estimation.pos.get([1]));
+			console.log(math.norm(estimation.velocity));
 		
 			// plot what has happend this step
 			let gtPlot = {

@@ -162,6 +162,8 @@ class Simulation {
 		this.#pfInitializer = pfInitializer;
 		
 		this.#plotter = new Plotter("pfPlot");
+		this.#plotter.setXlim(0, 50);
+		this.#plotter.setYlim(-2, 15);
 		
 		this.inputs = {};
 		this.parameters = {};
@@ -247,6 +249,7 @@ class Simulation {
 			Plotly.newPlot("gd", {
 				"data": [
 					{
+						"name": "Ground Truth",
 						"x": this.gtCurveX,
 						"y": this.gtCurveY,
 					},

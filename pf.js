@@ -130,11 +130,12 @@ class EstimationWeightedAverage extends AEstimation {
 		let result = new ParticleState();
 		let weightSum = 0;
 		for(let particle of particles) {
+			weightSum += particle.weight;
 			let tmp = particle.state.clone();
 			tmp.multiplyWith(particle.weight);
 			tmp.addTo(result);
 		}
-		result.multiplyWith(1.0 / particles.length);
+		result.multiplyWith(1.0 / weightSum);
 		return result;
 	}
 }

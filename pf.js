@@ -84,38 +84,38 @@ class ParticleFilter {
 		this.estimation = estimation; Asserts.isSubclassInstanceOf(estimation, AEstimation, "Estimation has to extend AEstimation");
 		this.resampling = resampling; Asserts.isSubclassInstanceOf(resampling, AResampling, "Resampling has to extend AResampling");
 		
-		this.ParticleState = ParticleState;
-		this.particles = [];
+		this.#ParticleState = ParticleState;
+		this.#particles = [];
 		for(let i = 0; i < particleCnt; ++i) {
-			this.particles.push(new Particle(0, new ParticleState()));
+			this.#particles.push(new Particle(0, new ParticleState()));
 		}
 	}
 	
-	setNeffThreshold(neffThreshold) { this.neffThresholdPercent = neffThreshold; }
+	setNeffThreshold(neffThreshold) { this.#neffThresholdPercent = neffThreshold; }
 	initWith(initializer) { initializer.init(this.particles); }
 	
 	update(control, observations) {
 		Asserts.isSubclassInstanceOf(control, AControl, "Control structure has to extend AControl");
 		Asserts.isSubclassInstanceOf(observations, AObservations, "Observations structure has to extend AObservations");
 		
-		if(this.lastNeff < this.particles.length * this.neffThresholdPercent) {
-			this.resampling.resample(this.particles, this.ParticleState);
+		if(this.#lastNeff < this.#particles.length * this.#neffThresholdPercent) {
+			this.#resampling.resample(this.#particles, this.#ParticleState);
 		}
-		this.transition.transition(this.particles, control);
-		this.evaluation.evaluate(this.particles, observations);
-		this.lastNeff = this.normalize();
-		return this.estimation.estimate(this.particles, this.ParticleState);
+		this.#transition.transition(this.particles, control);
+		this.#evaluation.evaluate(this.particles, observations);
+		this.#lastNeff = this.normalize();
+		return this.#estimation.estimate(this.#particles, this.#ParticleState);
 	}
 	
 	getParticles() { return this.particles; }
 	
 	#normalize() {
-		let weightSum = this.particles.reduce((partialSum, p) => partialSum + p.weight, 0);
+		let weightSum = this.#particles.reduce((partialSum, p) => partialSum + p.weight, 0);
 		Asserts.notNaN(weightSum, "Detected NaN in particle weights");
 		Asserts.isTrue(weightSum != 0, "Particle weight sum is 0!");
 		
 		let sum2 = 0;
-		for(let particle of this.particles) {
+		for(let particle of this.#particles) {
 			particle.weight /= weightSum;
 			sum2 += (particle.weight * particle.weight);
 		}

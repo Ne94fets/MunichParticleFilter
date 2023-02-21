@@ -156,14 +156,13 @@ class Simulation {
 	#pfInitializer = null;
 	#plotter = null;
 	#intervalHandle = null;
+	#plotRange = [[0, 0], [1, 1]];
 	
 	constructor(particleFilter, pfInitializer) {
 		this.#particleFilter = particleFilter;
 		this.#pfInitializer = pfInitializer;
 		
 		this.#plotter = new Plotter("pfPlot");
-		this.#plotter.setXlim(0, 50);
-		this.#plotter.setYlim(-2, 15);
 		
 		this.inputs = {};
 		this.parameters = {};
@@ -178,6 +177,9 @@ class Simulation {
 		this.#addInput("simulationPosSigma");
 		this.#addInput("transVelSigma");
 		this.#addInput("evalPosSigma");
+		
+		this.#setPlotLimits();
+		
 		this.#simulate();
 	}
 	
@@ -190,6 +192,36 @@ class Simulation {
 			this.parameters[name] = value;
 			this.#simulate();
 		});
+	}
+	
+	#setPlotLimits() {
+		const duration = this.parameters["simulationDuration"];
+		const x0 = this.parameters["launchPositionX"];
+		const y0 = this.parameters["launchPositionY"];
+		const v0 = this.parameters["launchVelocity"];
+		const angle = this.parameters["launchAngle"] / 180 * Math.PI;
+		const g = this.parameters["gravity"];
+		const v0x = v0 * Math.cos(angle);
+		const v0y = v0 * Math.sin(angle);
+	
+		const pos0 = this.#calcTrajectory(0, g, x0, y0, v0x, v0y);
+		const posMid = this.#calcTrajectory(duration/2, g, x0, y0, v0x, v0y);
+		const posEnd = this.#calcTrajectory(duration, g, x0, y0, v0x, v0y);
+		
+		const minX = Math.min(pos0[0], posEnd[0]) - 5;
+		const maxX = Math.max(pos0[0], posEnd[0]) + 5;
+		const minY = Math.min(pos0[1], posMid[1], posEnd[1]) - 5;
+		const maxY = Math.max(pos0[1], posMid[1], posEnd[1]) + 5;
+		
+		this.#plotter.setXlim(minX, maxX);
+		this.#plotter.setYlim(minY, maxY);
+		this.#plotRange = [[minX, maxX], [minY, maxY]];
+	}
+	
+	#calcTrajectory(t, g, x0, y0, v0x, v0y) {
+		const x = x0 + v0x * t;
+		const y = y0 + v0y * t + (1.0/2.0) * g * t*t;
+		return [x, y];
 	}
 	
 	#simulate() {
@@ -228,8 +260,9 @@ class Simulation {
 		this.#intervalHandle = setInterval(() => {
 			this.timestamps.push(t);
 			
-			const x = x0 + v0x * t;
-			const y = y0 + v0y * t + (1.0/2.0) * g * t*t;
+			const pos = this.#calcTrajectory(t, g, x0, y0, v0x, v0y);
+			const x = pos[0];
+			const y = pos[1];
 			this.gtCurveX.push(x);
 			this.gtCurveY.push(y);
 			
@@ -246,22 +279,36 @@ class Simulation {
 			this.estCurveY.push(estimation.pos.get([1]));
 		
 			// plot what has happend this step
-			Plotly.newPlot("gd", {
-				"data": [
-					{
-						"name": "Ground Truth",
-						"x": this.gtCurveX,
-						"y": this.gtCurveY,
-					},
-					{
-						"x": this.obsCurveX,
-						"y": this.obsCurveY,
-					},
-					{
-						"x": this.estCurveX,
-						"y": this.estCurveY,
-					}],
-			});
+			let gtPlot = {
+				name: "Ground Truth",
+				x: this.gtCurveX,
+				y: this.gtCurveY,
+				type: "scatter",
+			};
+			let obsPlot = {
+				name: "Observations",
+				x: this.obsCurveX,
+				y: this.obsCurveY,
+				type: "scatter",
+			};
+			let estPlot = {
+				name: "Estimation",
+				x: this.estCurveX,
+				y: this.estCurveY,
+				type: "scatter",
+			};
+			const layout = {
+				title: "Trajectories",
+				xaxis: {
+					autorange: false,
+					range: this.#plotRange[0],
+				},
+				yaxis: {
+					autorange: false,
+					range: this.#plotRange[1],
+				}
+			};
+			Plotly.newPlot("gd", [gtPlot, obsPlot, estPlot], layout);
 			
 			this.#plotter.update(this.#particleFilter.getParticles());
 			

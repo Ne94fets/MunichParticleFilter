@@ -66,4 +66,4 @@ let resampling = new ResamplingSimple();
 let pf = new ParticleFilter(5000, BallState, transition, evaluation, estimation, resampling);
 pf.initWith(new BallStateInit([-5, -5], [5, 5]));
 plotter.update(pf.getParticles());
-//pf.update();
+pf.update(new BallControl(), new BallObservations());

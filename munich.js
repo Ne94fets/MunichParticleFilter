@@ -132,6 +132,7 @@ class Simulation {
 	#particleFilter = null;
 	#pfInitializer = null;
 	#plotter = null;
+	#intervalHandle = null;
 	
 	constructor(particleFilter, pfInitializer) {
 		this.#particleFilter = particleFilter;
@@ -186,7 +187,12 @@ class Simulation {
 		this.gtCurveX = [];
 		this.gtCurveY = [];
 		var t = 0;
-		const intervalHandler = setInterval(() => {
+		
+		if (this.#intervalHandle != null) {
+			clearInterval(this.#intervalHandle);
+		}
+		
+		this.#intervalHandle = setInterval(() => {
 			this.timestamps.push(t);
 			
 			const x = x0 + v0x * t;
@@ -212,7 +218,7 @@ class Simulation {
 			
 			// check if simulation is done
 			if (t > duration) {
-				clearInterval(intervalHandler);
+				clearInterval(this.#intervalHandle);
 			}
 			
 			// increment time

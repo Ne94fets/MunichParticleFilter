@@ -1,8 +1,9 @@
 function normpdf (x, mean, stdDev) {
 	const meanDiff = x - mean;
-	const sqrtStd = Math.sqrt(2) * stdDev;
-	const erf = math.erf(meanDiff / sqrtStd);
-	return (1 + erf) / 2
+	const ratio = (meanDiff / stdDev);
+	const e = Math.exp(-1/2 * ratio * ratio);
+	const n = 1 / (stdDev * Math.sqrt(2 * Math.PI));
+	return n * e;
 }
 
 // Standard Normal variate using Box-Muller transform.

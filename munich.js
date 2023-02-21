@@ -1,3 +1,11 @@
+function normpdf (x, mean, stdDev) {
+	const meanDiff = x - mean;
+	const sqrtStd = Math.sqrt(2) * stdDev;
+	const erf = math.erf(meanDiff / sqrtStd);
+	return (1 + erf) / 2
+}
+
+
 // ######################
 // # BEHAVIOR
 // ######################
@@ -30,10 +38,14 @@ class BallEvaluation extends AEvaluation {
 	evaluate(particles, observations) { 
 		// evaluate each particle
 		for (let particle of particles) {
+			let pos = particle.state.pos;
 			
 			// calculate probability of this state given all observations
 			for (let obs of observations.getObservations()) {
-				const d = particle.pos - obs
+				const diff = math.subtract(pos, obs.pos);
+				const dist = math.norm(diff);
+				const prob = normpdf(dist, 0, obs.posSigma);
+				particle.weight *= prob;
 			}
 		}
 	}
@@ -74,6 +86,16 @@ class BallControl extends AControl {
 	}
 	
 }
+
+class BallObservation {
+	pos;
+	posSigma;
+	
+	constructor(pos, posSigma) {
+		this.pos = pos;
+		this.posSigma = posSigma;
+	}
+}
 class BallObservations extends AObservations {
 	#observations = [];
 	
@@ -94,10 +116,13 @@ class BallObservations extends AObservations {
 class Simulation {
 	#particleFilter = null;
 	#pfInitializer = null;
+	#plotter = null;
 	
 	constructor(particleFilter, pfInitializer) {
 		this.#particleFilter = particleFilter;
 		this.#pfInitializer = pfInitializer;
+		
+		this.#plotter = new Plotter("pfPlot");
 		
 		this.inputs = {};
 		this.parameters = {};
@@ -109,6 +134,7 @@ class Simulation {
 		this.#addInput("launchPositionY");
 		this.#addInput("launchVelocity");
 		this.#addInput("launchAngle");
+		this.#addInput("evalPosSigma");
 		this.#simulate();
 	}
 	
@@ -132,6 +158,7 @@ class Simulation {
 		const y0 = this.parameters["launchPositionY"];
 		const v0 = this.parameters["launchVelocity"];
 		const angle = this.parameters["launchAngle"] / 180 * Math.PI;
+		const evalPosSigma = this.parameters["evalPosSigma"];
 		
 		const v0x = v0 * Math.cos(angle);
 		const v0y = v0 * Math.sin(angle);
@@ -153,7 +180,7 @@ class Simulation {
 			this.gtCurveY.push(y);
 			
 			const control = new BallControl(dt);
-			const observations = new BallObservations([math.matrix([x, y])]);
+			const observations = new BallObservations([new BallObservation(math.matrix([x, y]), evalPosSigma)]);
 			
 			this.#particleFilter.update(control, observations);
 		
@@ -165,6 +192,8 @@ class Simulation {
 					
 				}],
 			});
+			
+			this.#plotter.update(this.#particleFilter.getParticles());
 			
 			// check if simulation is done
 			if (t > duration) {
@@ -185,6 +214,7 @@ let evaluation = new BallEvaluation();
 let estimation = new EstimationWeightedAverage();
 let resampling = new ResamplingSimple();
 let pf = new ParticleFilter(5000, BallState, transition, evaluation, estimation, resampling);
+pf.setNeffThreshold(1);
 
 let ballInitializer = new BallStateInit([-5, -5], [5, 5]);
 const simulation = new Simulation(pf, ballInitializer);

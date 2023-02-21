@@ -9,10 +9,10 @@ class BallStateInit extends AInitializer {
 	}
 }
 class BallTransition extends ATransition {
-	
+	transition(particles) { throw new Error("Abstract method!"); }
 }
 class BallEvaluation extends AEvaluation {
-	
+	evaluate(particles) { throw new Error("Abstract method!"); }
 }
 
 
@@ -20,22 +20,16 @@ class BallEvaluation extends AEvaluation {
 // # MODELS
 // ######################
 class BallState extends AParticleState {
-	#x = 0;
-	#y = 0;
-	#speedX = 0;
-	#speedY = 0;
+	#pos = math.matrix([0, 0]);
+	#velocity = math.matrix([0, 0]);
 	
 	multiplyWith(factor) {
-		this.x *= factor;
-		this.y *= factor;
-		this.speedX *= factor;
-		this.speedY *= factor;
+		this.pos = math.multiply(this.pos, factor);
+		this.velocity = math.multiply(this.velocity, factor);
 	}
 	addTo(dstState) {
-		dstState.x += this.x;
-		dstState.y += this.y;
-		dstState.speedX += this.speedX;
-		dstState.speedY += this.speedY;
+		dstState.pos = math.add(this.pos, dstState.pos);
+		dstState.velocity = math.add(this.velocity, dstState.velocity);
 	}
 	clone() {
 		let result = new BallState();
@@ -55,4 +49,4 @@ class BallObservations extends AObservations {
 // APP
 let pf = new ParticleFilter(5000, BallState, BallTransition, BallEvaluation, EstimationWeightedAverage, ResamplingSimple);
 pf.initWith(BallStateInit);
-pf.update();
+//pf.update();

@@ -42,7 +42,7 @@ class Plotter {
 			let px = particle.state.pos.get([0]);
 			let py = particle.state.pos.get([1]);
 			let pvx = particle.state.velocity.get([0]);
-			let pvy = particle.state.velocity.get([0]);
+			let pvy = particle.state.velocity.get([1]);
 			
 			this.particleAxis.x.push(px);
 			this.particleAxis.y.push(py);

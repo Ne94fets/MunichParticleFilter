@@ -103,7 +103,7 @@ class ParticleFilter {
 		}
 		this.#transition.transition(this.#particles, control);
 		this.#evaluation.evaluate(this.#particles, observations);
-		this.#lastNeff = this.normalize();
+		this.#lastNeff = this.#normalize();
 		return this.#estimation.estimate(this.#particles, this.#ParticleState);
 	}
 	

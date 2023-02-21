@@ -147,7 +147,7 @@ class ResamplingSimple extends AResampling {
 				return particles[i].clone();
 			}
 		}
-		Asserts.unreachable("ResamplingSimple::draw()");
+		return particles[particles.length - 1].clone();
 	}
 	
 	resample(particles, ParticleState) {
@@ -155,16 +155,15 @@ class ResamplingSimple extends AResampling {
 		let equalWeight = 1.0 / pCnt;
 		
 		let cumWeight = 0;
-		let particlesCopy = particles;
+		let particlesCopy = particles.splice(0, particles.length);
 		for(let i = 0; i < pCnt; ++i) {
 			cumWeight += particlesCopy[i].weight;
 			particlesCopy[i].weight = cumWeight;
 		}
 		
 		// sample new particle set by weights
-		particles.clear();
 		for(let i = 0; i < pCnt; ++i) {
-			let newParticle = this.draw(particlesCopy, cumWeight);
+			let newParticle = this.#draw(particlesCopy, cumWeight);
 			newParticle.weight = equalWeight;
 			particles.push(newParticle);
 		}

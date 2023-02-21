@@ -55,6 +55,20 @@ class BallObservations extends AObservations {
 }
 
 
+let particles = [];
+for(let i = 0; i < 100; ++i) {
+	let newParticle = new Particle(0.001, new BallState());
+	particles.push(newParticle);
+}
+let newParticle = new Particle(1, new BallState());
+newParticle.state.pos = math.matrix([1337, 1337]);
+particles.push(newParticle);
+console.log(particles);
+let blub = new ResamplingSimple();
+blub.resample(particles, BallState);
+console.log(particles);
+
+
 
 
 // APP

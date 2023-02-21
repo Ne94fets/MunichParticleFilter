@@ -1,6 +1,7 @@
 class Plotter {
 	#particleAxis = null;
 	#particleVelocityAxis = null;
+	#plotLayout = null;
 	#plot = null;
 	#container = null;
 	
@@ -10,24 +11,29 @@ class Plotter {
 			x: [], y: [],
 			mode: 'markers',
 			type: 'scatter',
-			opacity: 0.25,
+			colorscale: 'Inferno',
 			marker: {
-				color: [],
-				colorscale: 'Inferno'
+				showscale: true,
+				cauto: true,
+				color: []
 			}
 		};
 		this.particleVelocityAxis = {
 			x: [], y: [],
 			mode: 'lines',
+			colorscale: 'Inferno',
 			opacity: 0.5,
-			connectgaps: false,
-			lines: {
-				color: [],
-				colorscale: 'Inferno'
-			}
 		};
-		this.plot = Plotly.react(container, [this.particleVelocityAxis, this.particleAxis]);
+		this.plotLayout = {
+			title: 'Particles',
+			xaxis: {},
+			yaxis: {}
+		};
+		this.plot = Plotly.react(container, [this.particleVelocityAxis, this.particleAxis], this.plotLayout);
 	}
+	
+	setXlim(xMin, xMax) { this.plotLayout.xaxis.range = [xMin, xMax]; }
+	setYlim(yMin, yMax) { this.plotLayout.yaxis.range = [yMin, yMax]; }
 	
 	update(particles) {
 		this.particleAxis.x = [];
@@ -36,7 +42,6 @@ class Plotter {
 		
 		this.particleVelocityAxis.x = [];
 		this.particleVelocityAxis.y = [];
-		this.particleVelocityAxis.lines.color = [];
 		
 		for(let particle of particles) {
 			let px = particle.state.pos.get([0]);
@@ -54,10 +59,9 @@ class Plotter {
 			this.particleVelocityAxis.y.push(py + (pvy * 0.25));
 			this.particleVelocityAxis.x.push(null);
 			this.particleVelocityAxis.y.push(null);
-			this.particleVelocityAxis.lines.color.push(particle.weight);
 		}
 
-		Plotly.react(this.container, [this.particleVelocityAxis, this.particleAxis]);
+		Plotly.react(this.container, [this.particleVelocityAxis, this.particleAxis], this.plotLayout);
 	}
 	
 }

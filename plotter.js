@@ -2,6 +2,7 @@ class Plotter {
 	#particleAxis = null;
 	#particleVelocityAxis = null;
 	#plotLayout = null;
+	#plotConfig = null;
 	#plot = null;
 	#container = null;
 	
@@ -29,7 +30,8 @@ class Plotter {
 			xaxis: {},
 			yaxis: {}
 		};
-		this.plot = Plotly.react(container, [this.particleVelocityAxis, this.particleAxis], this.plotLayout);
+		this.plotConfig = { responsive: true };
+		this.plot = Plotly.react(container, [this.particleVelocityAxis, this.particleAxis], this.plotLayout, this.plotConfig);
 	}
 	
 	setXlim(xMin, xMax) {
@@ -67,7 +69,7 @@ class Plotter {
 			this.particleVelocityAxis.y.push(null);
 		}
 
-		Plotly.react(this.container, [this.particleVelocityAxis, this.particleAxis], this.plotLayout);
+		Plotly.react(this.container, [this.particleVelocityAxis, this.particleAxis], this.plotLayout, this.plotConfig);
 	}
 	
 }

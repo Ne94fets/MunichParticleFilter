@@ -95,8 +95,8 @@ class ParticleFilter {
 	initWith(initializer) { initializer.init(this.particles); }
 	
 	update(control, observations) {
-		Asserts.ctorExtendsFrom(control.prototype, AControl, "Control structure has to extend AControl");
-		Asserts.ctorExtendsFrom(observations.prototype, AObservations, "Observations structure has to extend AObservations");
+		Asserts.isSubclassInstanceOf(control, AControl, "Control structure has to extend AControl");
+		Asserts.isSubclassInstanceOf(observations, AObservations, "Observations structure has to extend AObservations");
 		
 		if(this.lastNeff < this.particles.length * this.neffThresholdPercent) {
 			this.resampling.resample(this.particles, this.ParticleState);

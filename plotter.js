@@ -32,8 +32,14 @@ class Plotter {
 		this.plot = Plotly.react(container, [this.particleVelocityAxis, this.particleAxis], this.plotLayout);
 	}
 	
-	setXlim(xMin, xMax) { this.plotLayout.xaxis.range = [xMin, xMax]; }
-	setYlim(yMin, yMax) { this.plotLayout.yaxis.range = [yMin, yMax]; }
+	setXlim(xMin, xMax) {
+		this.plotLayout.xaxis.autorange = false;
+		this.plotLayout.xaxis.range = [xMin, xMax];
+	}
+	setYlim(yMin, yMax) {
+		this.plotLayout.yaxis.autorange = false;
+		this.plotLayout.yaxis.range = [yMin, yMax];
+	}
 	
 	update(particles) {
 		this.particleAxis.x = [];

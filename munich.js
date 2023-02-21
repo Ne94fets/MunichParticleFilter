@@ -173,6 +173,7 @@ class Simulation {
 		this.#addInput("launchPositionY");
 		this.#addInput("launchVelocity");
 		this.#addInput("launchAngle");
+		this.#addInput("simulationPosSigma");
 		this.#addInput("transVelSigma");
 		this.#addInput("evalPosSigma");
 		this.#simulate();
@@ -198,6 +199,7 @@ class Simulation {
 		const y0 = this.parameters["launchPositionY"];
 		const v0 = this.parameters["launchVelocity"];
 		const angle = this.parameters["launchAngle"] / 180 * Math.PI;
+		const simulationPosSigma = this.parameters["simulationPosSigma"];
 		const transVelSigma = this.parameters["transVelSigma"];
 		const evalPosSigma = this.parameters["evalPosSigma"];
 		
@@ -211,6 +213,10 @@ class Simulation {
 		this.timestamps = [];
 		this.gtCurveX = [];
 		this.gtCurveY = [];
+		this.obsCurveX = [];
+		this.obsCurveY = [];
+		this.estCurveX = [];
+		this.estCurveY = [];
 		var t = 0;
 		
 		if (this.#intervalHandle != null) {
@@ -225,18 +231,33 @@ class Simulation {
 			this.gtCurveX.push(x);
 			this.gtCurveY.push(y);
 			
-			const control = new BallControl(dt, transVelSigma);
-			const observations = new BallObservations([new BallObservation(math.matrix([x, y]), evalPosSigma)]);
+			const obsX = gaussianRandom(x, simulationPosSigma);
+			const obsY = gaussianRandom(y, simulationPosSigma);
+			this.obsCurveX.push(obsX);
+			this.obsCurveY.push(obsY);
 			
-			this.#particleFilter.update(control, observations);
+			const control = new BallControl(dt, transVelSigma);
+			const observations = new BallObservations([new BallObservation(math.matrix([obsX, obsY]), evalPosSigma)]);
+			
+			const estimation = this.#particleFilter.update(control, observations);
+			this.estCurveX.push(estimation.pos.get([0]));
+			this.estCurveY.push(estimation.pos.get([1]));
 		
 			// plot what has happend this step
 			Plotly.newPlot("gd", {
-				"data": [{ 
-					"x": this.gtCurveX,
-					"y": this.gtCurveY,
-					
-				}],
+				"data": [
+					{
+						"x": this.gtCurveX,
+						"y": this.gtCurveY,
+					},
+					{
+						"x": this.obsCurveX,
+						"y": this.obsCurveY,
+					},
+					{
+						"x": this.estCurveX,
+						"y": this.estCurveY,
+					}],
 			});
 			
 			this.#plotter.update(this.#particleFilter.getParticles());
@@ -262,5 +283,5 @@ let resampling = new ResamplingSimple();
 let pf = new ParticleFilter(5000, BallState, transition, evaluation, estimation, resampling);
 pf.setNeffThreshold(1);
 
-let ballInitializer = new BallStateInit([-5, -5], [5, 5], 0, 90, 0, 50);
+let ballInitializer = new BallStateInit([-5, -5], [5, 5], 0, 360, 0, 50);
 const simulation = new Simulation(pf, ballInitializer);

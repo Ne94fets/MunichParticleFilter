@@ -58,6 +58,7 @@ class BallTransition extends ATransition {
 		for (let particle of particles) {
 			const newPos = math.add(particle.state.pos, math.multiply(particle.state.velocity, dt));
 			particle.state.pos = newPos;
+			//TODO: gravity?
 			
 			// modify velocity a bit
 			const vx = particle.state.velocity.get([0]);
@@ -158,9 +159,8 @@ class Simulation {
 	#intervalHandle = null;
 	#plotRange = [[0, 0], [1, 1]];
 	
-	constructor(particleFilter, pfInitializer) {
+	constructor(particleFilter) {
 		this.#particleFilter = particleFilter;
-		this.#pfInitializer = pfInitializer;
 		
 		this.#plotter = new Plotter("pfPlot");
 		
@@ -177,6 +177,14 @@ class Simulation {
 		this.#addInput("simulationPosSigma");
 		this.#addInput("transVelSigma");
 		this.#addInput("evalPosSigma");
+		this.#addInput("initMinX");
+		this.#addInput("initMaxX");
+		this.#addInput("initMinY");
+		this.#addInput("initMaxY");
+		this.#addInput("initMinAngle");
+		this.#addInput("initMaxAngle");
+		this.#addInput("initMinVelocity");
+		this.#addInput("initMaxVelocity");
 		
 		this.#setPlotLimits();
 		
@@ -237,12 +245,22 @@ class Simulation {
 		const simulationPosSigma = this.parameters["simulationPosSigma"];
 		const transVelSigma = this.parameters["transVelSigma"];
 		const evalPosSigma = this.parameters["evalPosSigma"];
+		const initMinX = this.parameters["initMinX"];
+		const initMaxX = this.parameters["initMaxX"];
+		const initMinY = this.parameters["initMinY"];
+		const initMaxY = this.parameters["initMaxY"];
+		const initMinAngle = this.parameters["initMinAngle"];
+		const initMaxAngle = this.parameters["initMaxAngle"];
+		const initMinVelocity = this.parameters["initMinVelocity"];
+		const initMaxVelocity = this.parameters["initMaxVelocity"];
 		
 		const v0x = v0 * Math.cos(angle);
 		const v0y = v0 * Math.sin(angle);
 		
 		// init particleFilter
-		this.#particleFilter.initWith(this.#pfInitializer);
+		//let ballInitializer = new BallStateInit([-5, -5], [5, 5], 0, 360, 0, 50);
+		let ballInitializer = new BallStateInit([initMinX, initMinY], [initMaxX, initMaxY], initMinAngle, initMaxAngle, initMinVelocity, initMaxVelocity);
+		this.#particleFilter.initWith(ballInitializer);
 		
 		// simulate perfect ball curve
 		this.timestamps = [];
@@ -335,5 +353,5 @@ let resampling = new ResamplingSimple();
 let pf = new ParticleFilter(5000, BallState, transition, evaluation, estimation, resampling);
 pf.setNeffThreshold(1);
 
-let ballInitializer = new BallStateInit([-5, -5], [5, 5], 0, 360, 0, 50);
-const simulation = new Simulation(pf, ballInitializer);
+
+const simulation = new Simulation(pf);

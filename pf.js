@@ -125,6 +125,12 @@ class ParticleFilter {
 
 
 
+class EstimationMaxWeight extends AEstimation {
+	estimate(particles, ParticleState) {
+		//TODO
+	}
+}
+
 class EstimationWeightedAverage extends AEstimation {
 	estimate(particles, ParticleState) {
 		let result = new ParticleState();
